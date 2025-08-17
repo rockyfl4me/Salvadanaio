@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Salvadanaio • Risparmia soldi</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a7">
+  <link rel="icon" href="icons/icon-192.png">
+  <style>
+    :root { --brand:#0a7; --ink:#111; --muted:#666; --bg:#f7f7f7; --card:#fff; }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+    header{position:sticky;top:0;background:#fff;border-bottom:1px solid #eee;padding:12px 16px;display:flex;align-items:center;gap:12px;z-index:2}
+    header h1{font-size:18px;margin:0;font-weight:700}
+    header .pill{margin-left:auto;background:var(--brand);color:#fff;padding:6px 10px;border-radius:999px;font-size:12px}
+    main{padding:16px;max-width:860px;margin:0 auto}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media (min-width: 720px){ .grid{grid-template-columns:1fr 1fr} }
+    .card{background:var(--card);border:1px solid #eee;border-radius:12px;padding:14px}
+    .card h2{margin:0 0 8px 0;font-size:16px}
+    label{font-size:12px;color:var(--muted)}
+    input,select,button,textarea{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;font:inherit}
+    button{background:var(--brand);color:#fff;border:none;cursor:pointer}
+    button.ghost{background:#f1f1f1;color:#111}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .totali{display:flex;gap:10px;flex-wrap:wrap}
+    .chip{background:#eef9f3;color:#0a7;border:1px solid #cfeede;padding:6px 10px;border-radius:10px;font-size:12px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px 6px;border-bottom:1px solid #eee;font-size:14px}
+    th{text-align:left;color:var(--muted);font-weight:600}
+    tfoot td{font-weight:700}
+    .right{text-align:right}
+    .warn{background:#fff6e6;border:1px solid #ffe0a3;color:#b36b00;padding:8px 10px;border-radius:8px;font-size:13px}
+    .ok{background:#eaf7ff;border:1px solid #cfe6ff;color:#0a4f8a;padding:8px 10px;border-radius:8px;font-size:13px}
+    .footer{color:#888;font-size:12px;margin-top:20px}
+    .muted{color:var(--muted)}
+    .spacer{height:10px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>💰 Salvadanaio</h1>
+    <span class="pill" id="saldo-pill">Saldo: 0 €</span>
+  </header>
+
+  <main>
+    <section class="grid">
+      <div class="card">
+        <h2>Aggiungi movimento</h2>
+        <div class="row">
+          <div>
+            <label>Tipo</label>
+            <select id="tipo">
+              <option value="entrata">Entrata</option>
+              <option value="spesa">Spesa</option>
+            </select>
+          </div>
+          <div>
+            <label>Importo (€)</label>
+            <input type="number" id="importo" step="0.01" min="0" placeholder="0.00">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Categoria</label>
+            <select id="categoria">
+              <option value="Stipendio">Stipendio</option>
+              <option value="Risparmio">Risparmio</option>
+              <option value="Cibo">Cibo</option>
+              <option value="Casa">Casa</option>
+              <option value="Trasporti">Trasporti</option>
+              <option value="Divertimento">Divertimento</option>
+              <option value="Altro">Altro</option>
+            </select>
+          </div>
+          <div>
+            <label>Data</label>
+            <input type="date" id="data">
+          </div>
+        </div>
+        <div class="row">
+          <div style="grid-column:1 / -1">
+            <label>Descrizione</label>
+            <input type="text" id="descrizione" placeholder="Es. pranzo, affitto, bonus, ecc.">
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="row">
+          <button id="aggiungi">Aggiungi movimento</button>
+          <button class="ghost" id="pulisci">Pulisci</button>
+        </div>
+        <div class="spacer"></div>
+        <div id="tip" class="ok" style="display:none"></div>
+      </div>
+
+      <div class="card">
+        <h2>Obiettivo di risparmio</h2>
+        <div class="row">
+          <div>
+            <label>Target (€)</label>
+            <input type="number" id="goal-importo" step="0.01" min="0" placeholder="500">
+          </div>
+          <div>
+            <label>Scadenza</label>
+            <input type="date" id="goal-data">
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <button id="salva-goal">Imposta obiettivo</button>
+        <div class="spacer"></div>
+        <div id="goal-info" class="warn" style="display:none"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Movimenti</h2>
+      <div class="row">
+        <div>
+          <label>Mese</label>
+          <input type="month" id="mese-filtro">
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button class="ghost" id="esporta">Esporta CSV</button>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="totali">
+        <span class="chip">Entrate mese: <b id="entrate-mese">0 €</b></span>
+        <span class="chip">Spese mese: <b id="spese-mese">0 €</b></span>
+        <span class="chip">Saldo mese: <b id="saldo-mese">0 €</b></span>
+      </div>
+      <div class="spacer"></div>
+      <table id="tabella">
+        <thead>
+          <tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Descrizione</th><th class="right">Importo (€)</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr><td colspan="4" class="right">Saldo totale</td><td class="right" id="saldo-totale">0 €</td><td></td></tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <div class="footer">
+      Salvataggio locale (offline) su questo dispositivo. Perderai i dati se cancelli la cache del browser/app.
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
+    }
+  </script>
+</body>
+</html>
